@@ -9,7 +9,7 @@ This folder contains Terraform code to deploy a containerized service onto AWS u
 Terraform provisions the following:
 
 ### 🔹 Networking
-- VPC (`10.0.0.0/16`)
+- VPC 
 - 2× Public Subnets
 - 2× Private Subnets
 - Internet Gateway

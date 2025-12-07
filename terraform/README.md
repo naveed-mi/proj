@@ -1,36 +1,37 @@
 # Terraform Infrastructure (Task 2)
 
-This folder contains Terraform code to deploy a **containerized web service** onto AWS using **ECS Fargate**, running inside a secure VPC and exposed via an Application Load Balancer (ALB).
-
+This folder contains Terraform code to deploy a containerized service onto AWS using ECS Fargate, VPC networking, and an Application Load Balancer (ALB). This task is independent of Task 1 and supports deploying any container image of your choice.
 
 ---
 
-## 📌 Infrastructure Created
+## 🚀 Overview
 
-Terraform provisions the following AWS resources:
+Terraform provisions the following:
 
-### **Networking**
-- VPC 
-- 2 public subnets  
-- 2 private subnets  
-- Internet Gateway  
-- NAT Gateway  
-- Public + Private Route Tables  
+### 🔹 Networking
+- VPC (`10.0.0.0/16`)
+- 2× Public Subnets
+- 2× Private Subnets
+- Internet Gateway
+- NAT Gateway
+- Route Tables + Associations
 
-### **Compute (ECS Fargate)**
+### 🔹 Compute (ECS Fargate)
 - ECS Cluster
-- ECS Task Definition (Fargate)
-- ECS Service running in **private subnets only**
+- ECS Task Definition
+- ECS Service running in **private** subnets
+
+### 🔹 Load Balancer
+- Application Load Balancer in public subnets
+- Listener (HTTP :80)
+- Target Group for ECS tasks
+
+### 🔹 IAM
+- ECS Task Execution Role
+- ECS Task Role
+
+### 🔹 Logging
 - CloudWatch Log Group
-
-### **Load Balancer**
-- Application Load Balancer in **public subnets**
-- Target group
-- Listener (port 80)
-
-### **IAM**
-- ECS task execution role  
-- ECS task role  
 
 ---
 
@@ -42,129 +43,123 @@ terraform/
 ├── variables.tf
 ├── outputs.tf
 ├── terraform.tfvars
-└── README.md
+└── README.md   ← this file
 ```
 
 ---
 
 ## 🛠 Prerequisites
 
-### **1. Terraform v1.5+**
-Install: https://developer.hashicorp.com/terraform/downloads  
+### ✔ Terraform v1.5+
+Install from: https://developer.hashicorp.com/terraform
 
-### **2. AWS Credentials (DO NOT commit them)**  
-Authenticate using any one of:
+### ✔ AWS Credentials (DO NOT commit them)
+Authenticate using one option below:
 
-#### Option A — Environment variables:
+#### Option A — Environment Variables
 ```
-export AWS_ACCESS_KEY_ID="xxx"
-export AWS_SECRET_ACCESS_KEY="xxx"
+export AWS_ACCESS_KEY_ID="xxxx"
+export AWS_SECRET_ACCESS_KEY="xxxx"
 export AWS_DEFAULT_REGION="eu-west-1"
 ```
 
-#### Option B — AWS CLI profile:
+#### Option B — AWS CLI Profile
 ```
 aws configure --profile myprofile
 export AWS_PROFILE=myprofile
 ```
 
-#### Option C — AWS SSO:
-If SSO is configured, Terraform will use it automatically.
+#### Option C — AWS SSO
+If SSO is enabled, Terraform uses it automatically.
 
 ---
 
-## 🔧 Configure Before Running
+## 🔧 Configuration Required
 
-Edit `terraform.tfvars` and set:
+Before running Terraform, update:
 
+### `terraform.tfvars`
 ```
 container_image = "your-dockerhub-username/simple-time-service:latest"
 ```
 
-You may replace the image name with any container image you want to deploy.
+This tells ECS which container to deploy.
 
 ---
 
-## ▶️ Deployment Steps
+## ▶️ Deployment Commands
 
-### **1. Plan**
+### 1. Initialize providers
+```
+terraform init
+```
+
+### 2. Plan infrastructure
 ```
 terraform plan
 ```
 
-### **2. Apply**
+### 3. Apply changes
 ```
 terraform apply
 ```
 
-Approve with **yes**.
-
-Terraform will:
-- Create all networking
-- Deploy the ECS cluster
-- Create IAM roles
-- Launch your container in private subnets
-- Attach the ALB
+Approve with `yes`.
 
 ---
 
-## 🌍 Testing
+## 🌍 Test the Deployment
 
 Get the ALB DNS name:
-
 ```
 terraform output -raw alb_dns_name
 ```
 
-Test it:
-
+Test the service:
 ```
 curl http://<alb_dns_name>/
 ```
 
-You should receive the container’s HTTP response.
-
 ---
 
-## 🧹 Destroy Infrastructure (Important)
+## 🧹 Destroy the Infrastructure
 
 ```
 terraform destroy
 ```
 
-Approve with **yes**.
+---
 
-This removes all created AWS resources.
+
+- Centralized Terraform state
+- DynamoDB state locking
+- No local `.tfstate` files
 
 ---
 
-## ✔️ Requirement Mapping
+## 2️⃣ CI/CD (GitHub Actions)
 
-| Requirement | Status |
-|------------|--------|
-| VPC with 2 public + 2 private subnets | ✅ Done |
-| ECS/EKS or equivalent | ✅ ECS Fargate |
-| Container runs only in private subnets | ✅ Done |
-| Public ALB directing to service | ✅ Done |
-| `terraform plan` + `terraform apply` only | ✅ Yes |
-| No credentials committed | ✅ Yes |
-| Variables + tfvars used | ✅ Yes |
-| Clean, documented Terraform | ✅ Yes |
+Add `.github/workflows/ci-cd.yml`  
+Pipeline will:
+- Build Docker image  
+- Push to registry  
+- Run Terraform plan/apply  
+- Use GitHub Secrets for AWS + Docker credentials  
+
 
 ---
 
-## ⚠️ IAM Permissions Required
+## ✔ Requirement Validation
 
-Your AWS user **must** have permissions like:
-
-- `ecs:*`
-- `iam:CreateRole`
-- `iam:PassRole`
-- `logs:CreateLogGroup`
-- `ec2:*`
-- `elasticloadbalancing:*`
-
-If you see **AccessDenied**, your IAM user needs additional privileges.
+| Required Item | Status |
+|---------------|--------|
+| VPC (public + private) | ✅ |
+| ECS or EKS | ✅ ECS Fargate |
+| Service in private subnets | ✅ |
+| Public ALB fronting service | ✅ |
+| terraform plan/apply only | ✅ |
+| No credentials in repo | ✅ |
+| Uses variables + tfvars | ✅ |
 
 ---
 

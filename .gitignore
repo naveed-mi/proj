@@ -1,0 +1,12 @@
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+
+# Python cache
+__pycache__/
+
+# macOS junk
+.DS_Store
+

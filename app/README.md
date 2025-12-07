@@ -8,7 +8,6 @@ on AWS ECS/EKS or any container runtime.
 ## Features
 - Minimal Python HTTP server (no external dependencies)
 - Returns JSON with timestamp + client IP
-- Supports X-Forwarded-For for real client IP
 - Dockerized using a non-root user
 - Small image size (python:3.11-slim)
 
